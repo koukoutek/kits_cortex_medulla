@@ -1,23 +1,19 @@
 import torch
 import os
-import random
 import traceback
-import matplotlib.pyplot as plt
 import numpy as np
-import torch.nn as nn
-import cc3d # connected-compoments in 3d
+import nibabel as nib
 import pandas as pd
 import time
 
-from monai.data import DataLoader, CacheDataset, Dataset
+from monai.data import DataLoader, Dataset
 from monai.data.utils import decollate_batch
 from monai.inferers import sliding_window_inference
-from monai.networks.nets import UNETR
-from monai.transforms import (ToTensord, Compose, LoadImaged, ToTensord, Spacingd, Transposed, Flipd, EnsureChannelFirstd, 
+from monai.networks.nets import UNETR, UNet
+from monai.transforms import (Compose, LoadImaged, Spacingd, Transposed, 
                               EnsureType, Compose, AsDiscrete, Resize)
 from utils import *
 from pathlib import Path
-from rt_utils import RTStructBuilder
 from nibabel import Nifti1Image, save
 
 metrics = {'case': [], 'time': [], #  case and time
