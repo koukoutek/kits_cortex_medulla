@@ -1,12 +1,7 @@
 import torch
 import os
-import random
 import traceback
-import matplotlib.pyplot as plt
-import numpy as np
-import torch.nn as nn
 import warnings
-import csv
 import pandas as pd
 warnings.filterwarnings("ignore")
 
@@ -17,11 +12,11 @@ from monai.losses import DiceLoss, DiceCELoss
 from monai.metrics import DiceMetric
 from monai.data.utils import decollate_batch
 from monai.inferers import sliding_window_inference
-from monai.networks.nets import UNet
+from monai.networks.nets import UNet, UNETR
 from monai.visualize import plot_2d_or_3d_image
-from monai.transforms import (ToTensord, Compose, LoadImaged, ToTensord, Spacingd, Transposed, Flipd, RandRotated, 
+from monai.transforms import (Compose, LoadImaged, Spacingd, Transposed, 
                               EnsureType, Compose, AsDiscrete, RandSpatialCropSamplesd, SpatialPadd, RandShiftIntensityd, 
-                              RandGaussianNoised, ThresholdIntensityd, RandAdjustContrastd, RandGaussianSmoothd)
+                              RandGaussianNoised, ThresholdIntensityd)
 from utils import *
 from pathlib import Path
 
@@ -75,26 +70,21 @@ def train(config, log_path, logger):
                                                     roi_size=train_transforms_config['RandSpatialCropSamplesd']['roi_size'], 
                                                     num_samples=train_transforms_config['RandSpatialCropSamplesd']['num_samples'], 
                                                     random_size=train_transforms_config['RandSpatialCropSamplesd']['random_size']),
-                            # RandAdjustContrastd(keys=train_transforms_config['RandAdjustContrastd']['keys'], prob=train_transforms_config['RandAdjustContrastd']['prob'],
-                            #                     gamma=train_transforms_config['RandAdjustContrastd']['gamma']),
-                            # RandGaussianSmoothd(keys=train_transforms_config['RandGaussianSmoothd']['keys'], prob=train_transforms_config['RandGaussianSmoothd']['prob'],
-                            #                     sigma_x=train_transforms_config['RandGaussianSmoothd']['sigma_x'], sigma_y=train_transforms_config['RandGaussianSmoothd']['sigma_y'], 
-                            #                     sigma_z=train_transforms_config['RandGaussianSmoothd']['sigma_z']),
-                            # RandShiftIntensityd(keys=train_transforms_config['RandShiftIntensityd']['keys'], 
-                            #                     offsets=train_transforms_config['RandShiftIntensityd']['offsets'], 
-                            #                     prob=train_transforms_config['RandShiftIntensityd']['prob']),
-                            # RandGaussianNoised(keys=train_transforms_config['RandGaussianNoised']['keys'], 
-                            #                    prob=train_transforms_config['RandGaussianNoised']['prob'], 
-                            #                    mean=train_transforms_config['RandGaussianNoised']['mean'], 
-                            #                    std=train_transforms_config['RandGaussianNoised']['std']), 
-                            # ThresholdIntensityd(keys=train_transforms_config['ThresholdIntensityd_clip_upper']['keys'], 
-                            #                     threshold=train_transforms_config['ThresholdIntensityd_clip_upper']['threshold'], 
-                            #                     above=train_transforms_config['ThresholdIntensityd_clip_upper']['above'], 
-                            #                     cval=train_transforms_config['ThresholdIntensityd_clip_upper']['cval']),
-                            # ThresholdIntensityd(keys=train_transforms_config['ThresholdIntensityd_clip_lower']['keys'], 
-                            #                     threshold=train_transforms_config['ThresholdIntensityd_clip_lower']['threshold'], 
-                            #                     above=train_transforms_config['ThresholdIntensityd_clip_lower']['above'], 
-                            #                     cval=train_transforms_config['ThresholdIntensityd_clip_lower']['cval']),
+                            RandShiftIntensityd(keys=train_transforms_config['RandShiftIntensityd']['keys'], 
+                                                offsets=train_transforms_config['RandShiftIntensityd']['offsets'], 
+                                                prob=train_transforms_config['RandShiftIntensityd']['prob']),
+                            RandGaussianNoised(keys=train_transforms_config['RandGaussianNoised']['keys'], 
+                                               prob=train_transforms_config['RandGaussianNoised']['prob'], 
+                                               mean=train_transforms_config['RandGaussianNoised']['mean'], 
+                                               std=train_transforms_config['RandGaussianNoised']['std']), 
+                            ThresholdIntensityd(keys=train_transforms_config['ThresholdIntensityd_clip_upper']['keys'], 
+                                                threshold=train_transforms_config['ThresholdIntensityd_clip_upper']['threshold'], 
+                                                above=train_transforms_config['ThresholdIntensityd_clip_upper']['above'], 
+                                                cval=train_transforms_config['ThresholdIntensityd_clip_upper']['cval']),
+                            ThresholdIntensityd(keys=train_transforms_config['ThresholdIntensityd_clip_lower']['keys'], 
+                                                threshold=train_transforms_config['ThresholdIntensityd_clip_lower']['threshold'], 
+                                                above=train_transforms_config['ThresholdIntensityd_clip_lower']['above'], 
+                                                cval=train_transforms_config['ThresholdIntensityd_clip_lower']['cval']),
     ])                            
 
     val_transforms = Compose([
@@ -117,13 +107,11 @@ def train(config, log_path, logger):
     val_dict = datadict[int(train_val_test_split[0]*len(datadict)):int(train_val_test_split[0]*len(datadict)) + int(train_val_test_split[1]*len(datadict))]
     test_dict = datadict[int(train_val_test_split[0]*len(datadict)) + int(train_val_test_split[1]*len(datadict)):]
 
-    # test_cases = [f['image'] for f in test_dict]
-    # # write test cases to csv 
-    # with open('test_cases.csv', 'w', newline='') as file:
-    #     writer = csv.writer(file)
-    #     writer.writerow(['image_path'])
-    #     for row in test_dict:
-    #         writer.writerow([row['image']])
+    val_df = pd.DataFrame(val_dict)
+    val_df.to_csv('./valset.csv')
+
+    train_df = pd.DataFrame(train_dict)
+    train_df.to_csv('./trainset.csv')
 
     # define dataset
     if config['dataset'] == 'Dataset':
@@ -132,17 +120,6 @@ def train(config, log_path, logger):
     elif config['dataset'] == 'CacheDataset':
         train_dataset = CacheDataset(data=train_dict, transform=train_transforms, cache_rate=config['cache_rate'])
         val_dataset = CacheDataset(data=val_dict, transform=val_transforms, cache_rate=config['cache_rate'])
-
-    
-    for i in range(len(train_dataset)):
-        sample = train_dataset[i][0]
-        print(sample['image_meta_dict']['filename_or_obj'])
-        fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-        X = np.hstack((sample['image'][0], sample['mask'][0], sample['mask'][1], sample['mask'][2], sample['mask'][3]))
-        tracker = IndexTracker(ax, X, vmin=np.amin(X), vmax=np.amax(X))
-        fig.canvas.mpl_connect('scroll_event', tracker.on_scroll)
-        plt.show()
-    exit(1)
 
     train_size = len(train_dataset)
     val_size = len(val_dataset)
@@ -162,6 +139,11 @@ def train(config, log_path, logger):
                      kernel_size=config['model']['kernel_size'], up_kernel_size=config['model']['up_kernel_size'], channels=config['model']['channels'],
                      strides=config['model']['strides'], norm=config['model']['norm'], dropout=config['model']['dropout'], 
                      num_res_units=config['model']['num_res_units'])
+    elif config['model']['name'] == 'UNETR': 
+        model = UNETR(in_channels=config['model']['in_channels'], out_channels=config['model']['out_channels'], img_size=config['model']['img_size'], 
+                      feature_size=config['model']['feature_size'], hidden_size=config['model']['hidden_size'], mlp_dim=config['model']['mlp_dim'], 
+                      num_heads=config['model']['num_heads'], pos_embed=config['model']['pos_embed'], norm_name=config['model']['norm_name'], 
+                      conv_block=config['model']['conv_block'], res_block=config['model']['res_block'], dropout_rate=config['model']['dropout_rate'])
     else: 
         raise Exception("No model has been defined in the config file")
     logger.info('Model {}.'.format(config['model']['name']))
@@ -245,7 +227,7 @@ def train(config, log_path, logger):
         metric = train_metric.aggregate().item() if config['metric']['reduction'] == 'mean' else train_metric.aggregate()
         if epoch > 400 and 'scheduler' in config.keys(): scheduler.step()
 
-        if epoch > 400 and epoch % 50 == 0 and torch.mean(metric) > 0.99:
+        if epoch > 400 and epoch % 50 == 0 and torch.mean(metric) > 0.6:
             logger.info(f'Writing images to Tensorboard...')
             plot_2d_or_3d_image(data=image, step=0, writer=writer, frame_dim=-1, tag=f'image at epoch: {epoch}')
             plot_2d_or_3d_image(data=segmentation, step=0, writer=writer, frame_dim=-1, tag=f'label at epoch: {epoch}')
@@ -254,7 +236,7 @@ def train(config, log_path, logger):
         writer.add_scalar(tag='Loss/train', scalar_value=losses[-1], global_step=epoch)
         logger.info(f'Epoch {epoch} of {config["epochs"]} with Train loss {losses[-1]}')
         if epoch % 10 == 0: logger.info(f'Train metric per class {metric}')
-        logger.info(f'Train metric mean {torch.mean(metric)}')
+        logger.info(f'Train metric mean: {torch.mean(metric)} with cortex: {metric[0]} medulla: {metric[1]} and mass: {metric[2]}')
         logger.info(f'-------------- Finished epoch {epoch} -------------')
         train_metric.reset()
 
@@ -284,15 +266,18 @@ def train(config, log_path, logger):
                 writer.add_scalar(tag='Loss/eval', scalar_value=val_losses[-1], global_step=epoch)
                 logger.info(f'Eval loss {val_losses[-1]}')
                 logger.info(f'Eval metric per class {metric}')
-                logger.info(f'Eval metric mean {torch.mean(metric)}')
-                logger.info(f'-------------- Finished epoch {epoch} -------------') 
+                logger.info(f'Eval metric mean {torch.mean(metric)} with cortex: {metric[0]} medulla: {metric[1]} and mass: {metric[2]}')
                 val_metric.reset()
 
                 # save models
                 if torch.mean(metric) > metric_threshold:
+                    metric_threshold = torch.mean(metric)
+                    logger.info(f'New metric threshold {metric_threshold}') 
                     if not os.path.exists(log_path.joinpath(config['logs']).joinpath('models')):
                         os.makedirs(log_path.joinpath(config['logs']).joinpath('models'))
                     save_checkpoint(model_state_dict=model.state_dict(), optimizer_seg_state_dict=optimizer.state_dict(), 
-                                    save_path=log_path.joinpath(config['logs']).joinpath('models/model{}.tar'.format(epoch)))
+                                    save_path=log_path.joinpath(config['logs']).joinpath('models/model.tar'.format(epoch)))
+                
+                logger.info(f'-------------- Finished epoch {epoch} -------------') 
 
     return model  

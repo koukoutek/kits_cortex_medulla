@@ -9,10 +9,12 @@ device: 'cuda'
 val_interval: 5
 data_dir: '/path/to/masks'
 kits_data_dir: '/path/to/kits23'
+
 # Cache dataset to be used for faster data loading during training, Dataset to be used during validation
 # dataset: CacheDataset
 dataset: Dataset
 cache_rate: 1
+
 train_val_test_split: [0.75, 0.25, 0]
 use_seed: false
 seed: 0

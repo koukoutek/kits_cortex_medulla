@@ -1,16 +1,8 @@
-import os
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
-import torch.nn.functional as F
-from monai.transforms import MapTransform, InvertibleTransform, Resize
-import nibabel as nib
-import open3d as o3d
+from monai.transforms import MapTransform
 import nrrd
 
-from math import floor, ceil
-from monai.networks.nets import UNet
-from rt_utils import RTStructBuilder
 from monai.data import MetaTensor
 from pathlib import Path
 
@@ -96,13 +88,6 @@ class IndexTracker:
         self.ax.set_ylabel('slice %s' % self.ind)
         self.im.axes.figure.canvas.draw()
 
-# # How to user IndexTracker
-# fig, ax = plt.subplots(1, 1)
-# X = np.transpose(ct, axes=(2,1,0)) # image to show
-# tracker = IndexTracker(ax, X, vmin=np.amin(X), vmax=np.amax(X))
-# fig.canvas.mpl_connect('scroll_event', tracker.on_scroll)
-# plt.show()
-
 def evaluate_true_false(inp):
     inp = str(inp).upper()
     if 'TRUE'.startswith(inp):
@@ -111,36 +96,6 @@ def evaluate_true_false(inp):
         return False
     else:
         raise ValueError('Argument error. Expected bool type.')
-
-
-def read_model(model_path):
-    """
-    Reads a saved model from the specified path and returns the model.
-
-    Args:
-        model_path (str): The path to the saved model file.
-
-    Returns:
-        torch.nn.Module: The loaded model.
-
-    """
-    saved_model = torch.load(model_path)
-
-    # KiTS model
-    model = UNet(spatial_dims=3, in_channels=1, out_channels=3, kernel_size=3, up_kernel_size=3, channels=[32, 64, 128, 256, 512],
-                        strides=[2, 2, 2, 2], norm='instance', dropout=.3, num_res_units=3)
-    
-    model_dict = saved_model['model_state_dict']
-
-    new_dict = {}
-    for k,v in model_dict.items():
-        if str(k).startswith('module'): # module will be there in case of training in multiple GPUs
-            new_dict[k[7:]] = v
-        else:
-            new_dict[k] = v
-    model.load_state_dict(new_dict)
-    
-    return model
 
 
 def dice(im1, im2, empty_score=1.0):
