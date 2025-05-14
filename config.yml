@@ -7,10 +7,10 @@ epochs: 1500
 logs: 'duke_kits_exp1'
 device: 'cuda'
 val_interval: 5
-data_dir: '/path/to/masks'
-kits_data_dir: '/path/to/kits23'
+data_dir: '/PATH/TO/MASKS'
+kits_data_dir: '/PATH/TO/KITS21'
 
-# Cache dataset to be used for faster data loading during training, Dataset to be used during validation
+# Cache dataset to be used for faster data loading during training, Dataset to be used during validation. See: https://docs.monai.io/en/stable/data.html#cachedataset
 # dataset: CacheDataset
 dataset: Dataset
 cache_rate: 1
@@ -20,7 +20,7 @@ use_seed: false
 seed: 0
 save_model_when: 0.9 # Metric has to be greater than this value for the model to be saved
 
-# Dataloader
+# Dataloader - to be optimized for training speed, depending of the GPU memory
 dataloader:
   batch_size: 40
   num_workers: 2

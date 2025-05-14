@@ -42,7 +42,7 @@ def save_checkpoint(model_state_dict,
                 'optimizer_seg_state_dict': optimizer_seg_state_dict,
                 }, save_path)
     
-def key_error_raiser(ex): raise Exception(ex)
+def key_error_raiser(ex): raise Exception(ex) # raise key error if the key is not found in the config file
 
 def train(config, log_path, logger):
 
@@ -107,11 +107,12 @@ def train(config, log_path, logger):
     val_dict = datadict[int(train_val_test_split[0]*len(datadict)):int(train_val_test_split[0]*len(datadict)) + int(train_val_test_split[1]*len(datadict))]
     test_dict = datadict[int(train_val_test_split[0]*len(datadict)) + int(train_val_test_split[1]*len(datadict)):]
 
+    # save  current run train and val sets 
     val_df = pd.DataFrame(val_dict)
-    val_df.to_csv('./valset.csv')
+    val_df.to_csv(log_path.joinpath(f'{config["logs"]}/valset.csv'))
 
     train_df = pd.DataFrame(train_dict)
-    train_df.to_csv('./trainset.csv')
+    train_df.to_csv(log_path.joinpath(f'{config["logs"]}/trainset.csv'))
 
     # define dataset
     if config['dataset'] == 'Dataset':

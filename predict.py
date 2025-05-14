@@ -25,9 +25,9 @@ train_cases = ['case_00009', 'case_00039', 'case_00047', 'case_00070', 'case_000
                'case_00098', 'case_00113', 'case_00189', 'case_00204', 'case_00205', 
                'case_00248', 'case_00267', 'case_00283', 'case_00405', 'case_00407']
 
-cases = sorted([f for f in Path('/path/to/kits23').glob('*') if f.is_dir()])
+cases = sorted([f for f in Path('/PATH/TO/KITS21').glob('*') if f.is_dir()]) # change to your path
 cases = [f for f in cases if f.name in val_cases]
-masks = sorted([f for f in Path('/path/to/masks').glob('*')])
+masks = sorted([f for f in Path('/PATH/TO/MASKS').glob('*')]) # change to your path
 masks = [f for f in masks if f"case_{f.name.split('.')[0].split('_')[-1]}" in val_cases]
 case_id = sorted([str(f).split('\\')[-1].split('_')[-1].split('.')[0] for f in masks])
 cases = sorted([f for f in cases if str(f).split('\\')[-1].split('_')[-1] in case_id])
@@ -53,16 +53,15 @@ val_loader = DataLoader(val_dataset, batch_size=1,
                             shuffle=False,
                             num_workers=0)
 
-
 # # UNET
-model_path = Path('/path/to/UNET.tar')
+model_path = Path('/PATH/TO/UNET.tar') # change to your path
 model = UNet(spatial_dims=3, in_channels=1, out_channels=4,
                      kernel_size=3, up_kernel_size=3, channels=[32, 64, 128, 256, 512],
                      strides=[2, 2, 2, 2], norm='instance', dropout=0.3, 
                      num_res_units=3)
 
 # # UNETR
-# model_path = Path('/path/to/UNETR.tar')
+# model_path = Path('/PATH/TO/UNETR.tar') # change to your path
 # model = UNETR(in_channels=1, out_channels=4, img_size=[96, 96, 96], 
 #                       feature_size=16, hidden_size=768, mlp_dim=3072, 
 #                       num_heads=12, pos_embed='perceptron', norm_name='instance', 
@@ -77,7 +76,6 @@ post_label = Compose([EnsureType()])
 
 with torch.no_grad():
     model.eval()
-    # model.train()
 
     for k, val_data in enumerate(val_loader):
         start_time = time.time()

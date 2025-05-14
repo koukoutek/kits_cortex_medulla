@@ -2,6 +2,7 @@ __pycache__/
 models/
 output/
 predictions/
+figures/
 *.csv
 
 myconfig.yml
