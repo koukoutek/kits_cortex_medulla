@@ -62,3 +62,7 @@ The `config.yml` file contains all training and evaluation parameters, including
 - Validation parameters  
 
 Adjust it as needed for your setup.  
+
+## Link to MS Teams meeting
+
+https://teams.microsoft.com/l/meetingrecap?driveId=b%21Jlq4QIbqcE2a64a0A1gQaedfa-4hRAFAmOt1Z7nmfiFUSd2wqdQISYGN4cuIHSDP&driveItemId=01ULXUSD6QP6LWC7W3UREY42JNTN6U5C4B&sitePath=https%3A%2F%2Fuzleuven-my.sharepoint.com%2F%3Av%3A%2Fg%2Fpersonal%2Fkonstantinos_koukoutegos_uzleuven_be%2FEdB_l2F-26RJjmktm31Oi4EBz9-1XLdgkng_b2CsIMi4tg&fileUrl=https%3A%2F%2Fuzleuven-my.sharepoint.com%2Fpersonal%2Fkonstantinos_koukoutegos_uzleuven_be%2FDocuments%2FOpnamen%2FUpdate%2520on%2520the%2520renal%2520cortex%2520and%2520medulla%2520segmentation-20250515_160550-Meeting%2520Recording.mp4%3Fweb%3D1&iCalUid=040000008200E00074C5B7101A82E00800000000107AC9E2AEC4DB010000000000000000100000004A47C4836BE0A643AD29DE661CBEFA27&threadId=19%3Ameeting_MGQwZDIwNTctNGQ2ZS00ZTRkLTg1NGEtMDJkZDAwYmUyMGRk%40thread.v2&organizerId=d60ca9b3-4aad-4767-b8f5-e11b3e251407&tenantId=a8da9b9a-de5a-4522-8935-b6c421e93e7c&callId=f7d0ee84-57e2-407c-b4da-81c56ada7af5&threadType=Meeting&meetingType=Scheduled&subType=RecapSharingLink_RecapCore
